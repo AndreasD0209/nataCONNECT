@@ -7,7 +7,7 @@ import { Modal } from '../ui/Modal';
 import { mockShieldRules, mockTransactions, mockScamReports } from '../../stores/appStore';
 import type { Card, FamilyMember, ShieldRule, Transaction, ScamReport } from '../../stores/appStore';
 import { piAPI } from '../../api/pi';
-import { reportScamToCommunityStore, subscribeToCommunityFeed, getCommunityStats, getCommunityReport } from '../../api/communityReports';
+import { reportScamToFirebase, subscribeToCommunityFeed, getCommunityStats, getCommunityReport } from '../../api/firebase';
 
 interface ShieldDashboardProps {
   emergencyLockActive: boolean;
@@ -302,8 +302,8 @@ export function ShieldDashboard({ currentMember, familyShieldRules, emergencyLoc
             result.firstSeen = community.createdAt || result.firstSeen;
             if (community.description) result.notes = [...result.notes, community.description];
           }
-          } catch (e) {
-          // ignore local community feed errors
+        } catch (e) {
+          // ignore firebase errors
         } finally {
           setScanResult(result);
           setRecentScans(prev => [result, ...prev].slice(0, 3));
@@ -346,7 +346,7 @@ export function ShieldDashboard({ currentMember, familyShieldRules, emergencyLoc
     setReportMessage('');
 
     try {
-      const report = await reportScamToCommunityStore({
+      const report = await reportScamToFirebase({
         hostname,
         sellerName: scanResult.hostname,
         sellerUrl: scanResult.hostname,
@@ -434,7 +434,7 @@ export function ShieldDashboard({ currentMember, familyShieldRules, emergencyLoc
   useEffect(() => {
     const unsubscribe = subscribeToCommunityFeed(reports => setCommunityReports(reports), countryCode);
     getCommunityStats().then(setCommunityStats).catch(() => {
-      // ignore local community feed errors when unavailable
+      // ignore firebase errors when not configured
     });
     return unsubscribe;
   }, [countryCode]);
