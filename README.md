@@ -113,6 +113,8 @@ This starts the optional local server used for the self-hosted, local-first depl
 
 No other external service, database, or third party API is used beyond what is listed above. The application does not collect, transmit, or store personal data on any server.
 
+Note: Live end-to-end testing of the Fireworks/AMD integration was blocked by a hackathon platform access issue (Fireworks AI credit and AMD GPU pod provisioning) at submission time. The integration code, model configuration, and connection logic are complete and reviewable in `src/lib/fireworksClient.ts`.
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.

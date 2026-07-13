@@ -1,5 +1,9 @@
 const FIREWORKS_CHAT_COMPLETIONS_URL = 'https://api.fireworks.ai/inference/v1/chat/completions';
 
+// Fireworks AI serves this model on AMD Instinct MI300X GPUs.
+// See: https://fireworks.ai/blog
+const FIREWORKS_MODEL = 'accounts/fireworks/models/llama-v3p3-70b-instruct';
+
 type FireworksGuideResponse = {
   choices?: Array<{
     message?: {
@@ -15,7 +19,7 @@ export async function askGuideThroughFireworks(question: string): Promise<string
       : undefined) ?? 'FIREWORKS_API_KEY_PLACEHOLDER';
 
   const requestBody = {
-    model: 'accounts/fireworks/models/llama-v3p1-8b-instruct',
+    model: FIREWORKS_MODEL,
     temperature: 0.2,
     max_tokens: 220,
     messages: [
