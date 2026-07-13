@@ -156,10 +156,11 @@ const familyGoalIcons: Record<string, React.ReactNode> = {
 export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember | null }) {
   const [goals, setGoals] = useState<Goal[]>(mockGoals);
   const [familyGoals, setFamilyGoals] = useState<FamilyGoal[]>(mockFamilyGoals);
-  const [categoryLimits] = useState<CategoryLimit[]>(mockCategoryLimits);
+  const [categoryLimits, setCategoryLimits] = useState<CategoryLimit[]>(mockCategoryLimits);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showAddLimit, setShowAddLimit] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [customContributionAmount, setCustomContributionAmount] = useState('');
   const [newGoalName, setNewGoalName] = useState('');
   const [newGoalAmount, setNewGoalAmount] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('other');
@@ -216,10 +217,43 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
   };
 
   const contributeToGoal = (goalId: string, amount: number) => {
+    if (!Number.isFinite(amount) || amount <= 0) return;
+
     setGoals(prev => prev.map(g =>
       g.id === goalId ? { ...g, currentAmount: Math.min(g.targetAmount, g.currentAmount + amount) } : g
     ));
     setSelectedGoal(null);
+  };
+
+  const addCategoryLimit = () => {
+    const amount = parseFloat(newLimitAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+
+    setCategoryLimits(prev => {
+      const existingLimit = prev.find(limit => limit.category === newLimitCategory);
+
+      if (existingLimit) {
+        return prev.map(limit =>
+          limit.category === newLimitCategory
+            ? { ...limit, monthlyLimit: amount, isActive: true }
+            : limit
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          id: String(Date.now()),
+          category: newLimitCategory,
+          monthlyLimit: amount,
+          currentSpent: 0,
+          isActive: true,
+        },
+      ];
+    });
+
+    setShowAddLimit(false);
+    setNewLimitAmount('');
   };
 
   const totalTargetAmount = goals.reduce((sum, g) => sum + g.targetAmount, 0);
@@ -429,7 +463,7 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
           </div>
           <div className="flex gap-3 justify-end">
             <Button variant="ghost" onClick={() => setShowAddLimit(false)}>Cancel</Button>
-            <Button variant="goals" onClick={() => setShowAddLimit(false)}>Set Limit</Button>
+            <Button variant="goals" onClick={addCategoryLimit}>Set Limit</Button>
           </div>
         </div>
       </Modal>
@@ -479,10 +513,24 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
               <div className="flex gap-2">
                 <input
                   type="number"
+                  value={customContributionAmount}
+                  onChange={e => setCustomContributionAmount(e.target.value)}
                   placeholder="Amount"
                   className="flex-1 glass-input rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 outline-none"
                 />
-                <Button variant="goals" size="sm">Add</Button>
+                <Button
+                  variant="goals"
+                  size="sm"
+                  disabled={selectedGoal.currentAmount >= selectedGoal.targetAmount}
+                  onClick={() => {
+                    const amount = parseFloat(customContributionAmount);
+                    if (!Number.isFinite(amount) || amount <= 0) return;
+                    contributeToGoal(selectedGoal.id, amount);
+                    setCustomContributionAmount('');
+                  }}
+                >
+                  Add
+                </Button>
               </div>
             </div>
 
