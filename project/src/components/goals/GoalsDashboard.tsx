@@ -164,6 +164,7 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
   const [newGoalName, setNewGoalName] = useState('');
   const [newGoalAmount, setNewGoalAmount] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('other');
+  const [newGoalIsShieldProtected, setNewGoalIsShieldProtected] = useState(false);
   const [newGoalDeadline, setNewGoalDeadline] = useState('');
   const [newGoalScope, setNewGoalScope] = useState<'personal' | 'family'>('personal');
   const [newLimitCategory, setNewLimitCategory] = useState('entertainment');
@@ -184,7 +185,7 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
       currentAmount: 0,
       category: newGoalCategory,
       deadline: newGoalDeadline || undefined,
-      isShieldProtected: false,
+      isShieldProtected: newGoalIsShieldProtected,
       icon: 'Target',
       color: categoryColors[newGoalCategory] || '#94a3b8',
     };
@@ -212,6 +213,7 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
     setShowAddGoal(false);
     setNewGoalName('');
     setNewGoalAmount('');
+    setNewGoalIsShieldProtected(false);
     setNewGoalDeadline('');
     setNewGoalScope('personal');
   };
@@ -223,6 +225,13 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
       g.id === goalId ? { ...g, currentAmount: Math.min(g.targetAmount, g.currentAmount + amount) } : g
     ));
     setSelectedGoal(null);
+  };
+
+  const toggleGoalShieldProtection = (goalId: string, isShieldProtected: boolean) => {
+    setGoals(prev => prev.map(g =>
+      g.id === goalId ? { ...g, isShieldProtected } : g
+    ));
+    setSelectedGoal(prev => prev && prev.id === goalId ? { ...prev, isShieldProtected } : prev);
   };
 
   const addCategoryLimit = () => {
@@ -411,6 +420,15 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
               className="w-full glass-input rounded-xl px-4 py-3 text-sm text-white outline-none"
             />
           </div>
+          <label className="flex items-center gap-2 text-xs text-slate-300">
+            <input
+              type="checkbox"
+              checked={newGoalIsShieldProtected}
+              onChange={e => setNewGoalIsShieldProtected(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
+            />
+            Shield protect this goal
+          </label>
           {currentMember && currentMember.role === 'admin' ? (
             <div>
               <label className="text-xs text-slate-400 block mb-1.5">Scope</label>
@@ -533,6 +551,16 @@ export function GoalsDashboard({ currentMember }: { currentMember?: FamilyMember
                 </Button>
               </div>
             </div>
+
+            <label className="flex items-center gap-2 text-xs text-slate-300">
+              <input
+                type="checkbox"
+                checked={selectedGoal.isShieldProtected}
+                onChange={e => toggleGoalShieldProtection(selectedGoal.id, e.target.checked)}
+                className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
+              />
+              Shield protect this goal
+            </label>
 
             {selectedGoal.isShieldProtected && (
               <div className="p-3 rounded-lg bg-slate-950/90 border border-slate-700">
