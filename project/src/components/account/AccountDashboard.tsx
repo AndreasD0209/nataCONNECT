@@ -11,34 +11,20 @@ import { marketAPI } from '../../api/market';
 import { bankAPI } from '../../api/bank';
 // Bank/Tink removed for now
 
-type AiProvider = 'anthropic' | 'openai' | 'ollama' | 'custom';
+type AiProvider = 'fireworks' | 'custom';
 
-const defaultOllamaEndpoint = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${window.location.hostname}:11434/api/chat`
-  : 'http://localhost:11434/api/chat';
+const defaultFireworksEndpoint = 'https://api.fireworks.ai/inference/v1';
 
 const aiProviderLabels: Record<AiProvider, string> = {
-  anthropic: 'Anthropic (Claude)',
-  openai: 'OpenAI',
-  ollama: 'Ollama (Local)',
+  fireworks: 'Fireworks AI',
   custom: 'Custom',
 };
 
 const aiProviderDefaults: Record<AiProvider, { endpoint: string; model: string; suggestions: string[] }> = {
-  anthropic: {
-    endpoint: 'https://api.anthropic.com/v1/messages',
-    model: 'claude-sonnet-4-6',
-    suggestions: ['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5'],
-  },
-  openai: {
-    endpoint: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-4o',
-    suggestions: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
-  },
-  ollama: {
-    endpoint: defaultOllamaEndpoint,
-    model: 'llama3',
-    suggestions: ['llama3', 'mistral', 'phi3', 'gemma'],
+  fireworks: {
+    endpoint: defaultFireworksEndpoint,
+    model: 'llama-v3p3-70b-instruct',
+    suggestions: ['llama-v3p3-70b-instruct'],
   },
   custom: {
     endpoint: '',
@@ -77,10 +63,10 @@ export function AccountDashboard({ currentMember, emergencyPasscode, onSetEmerge
   const [pin, setPin] = useState(emergencyPasscode);
   const [message, setMessage] = useState('');
 
-  const [aiProvider, setAiProvider] = useState<AiProvider>('anthropic');
-  const [aiEndpoint, setAiEndpoint] = useState<string>(aiProviderDefaults.anthropic.endpoint);
+  const [aiProvider, setAiProvider] = useState<AiProvider>('fireworks');
+  const [aiEndpoint, setAiEndpoint] = useState<string>(aiProviderDefaults.fireworks.endpoint);
   const [aiApiKey, setAiApiKey] = useState('');
-  const [aiModel, setAiModel] = useState<string>(aiProviderDefaults.anthropic.model);
+  const [aiModel, setAiModel] = useState<string>(aiProviderDefaults.fireworks.model);
   const [showApiKey, setShowApiKey] = useState(false);
   const [aiStatus, setAiStatus] = useState<'idle' | 'success' | 'error' | 'testing'>('idle');
   const [aiFeedback, setAiFeedback] = useState('');
@@ -134,9 +120,7 @@ export function AccountDashboard({ currentMember, emergencyPasscode, onSetEmerge
   useEffect(() => {
     try {
       const config = loadNataAIConfig();
-      const provider = config.provider && ['anthropic', 'openai', 'ollama', 'custom'].includes(config.provider)
-        ? (config.provider as AiProvider)
-        : 'anthropic';
+      const provider = config.provider === 'custom' ? 'custom' : 'fireworks';
       setAiProvider(provider);
       setAiEndpoint(config.endpoint || aiProviderDefaults[provider].endpoint);
       setAiModel(config.model || aiProviderDefaults[provider].model);
@@ -427,7 +411,7 @@ export function AccountDashboard({ currentMember, emergencyPasscode, onSetEmerge
                   Provider
                   <select
                     value={aiProvider}
-                    onChange={e => applyProviderDefaults(e.target.value as any)}
+                    onChange={e => applyProviderDefaults(e.target.value as AiProvider)}
                     className="w-full glass-input rounded-xl px-4 py-3 text-sm text-white bg-transparent outline-none"
                   >
                     {Object.entries(aiProviderLabels).map(([key, label]) => (
@@ -454,7 +438,7 @@ export function AccountDashboard({ currentMember, emergencyPasscode, onSetEmerge
                   value={aiEndpoint}
                   onChange={e => setAiEndpoint(e.target.value)}
                   className="w-full glass-input rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none"
-                  placeholder="API endpoint"
+                  placeholder="https://api.fireworks.ai/inference/v1"
                 />
               </label>
 
@@ -492,18 +476,6 @@ export function AccountDashboard({ currentMember, emergencyPasscode, onSetEmerge
                     </button>
                   ))}
                 </div>
-
-                {aiProvider === 'ollama' && (
-                  <div className="rounded-2xl border border-slate-700 bg-slate-950/80 p-4 text-sm text-slate-300">
-                    <div className="mb-2 font-semibold text-white">Pi instructions for Ollama</div>
-                    <pre className="whitespace-pre-wrap break-words text-xs text-slate-300 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
-{`Run AI locally on your Pi — no API key needed
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull llama3
-Endpoint: http://localhost:11434/api/chat`}
-                    </pre>
-                  </div>
-                )}
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">

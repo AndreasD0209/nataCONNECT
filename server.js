@@ -8,6 +8,18 @@ const Database = require('better-sqlite3');
 const app = express();
 const db = new Database('nataconnect.db');
 const port = Number(process.env.PORT || 3001);
+const DEFAULT_FIREWORKS_ENDPOINT = 'https://api.fireworks.ai/inference/v1';
+const DEFAULT_FIREWORKS_MODEL = 'llama-v3p3-70b-instruct';
+
+function normalizeChatCompletionsEndpoint(endpoint) {
+  const trimmed = (endpoint || DEFAULT_FIREWORKS_ENDPOINT).trim().replace(/\/+$/, '');
+
+  if (trimmed.endsWith('/chat/completions')) {
+    return trimmed;
+  }
+
+  return `${trimmed}/chat/completions`;
+}
 
 app.use(cors());
 app.use(express.json());
@@ -197,26 +209,43 @@ app.get('/pi/status', (req, res) => {
 });
 
 app.post('/ai/chat', async (req, res) => {
-  const { messages, systemPrompt, model, apiKey, endpoint } = req.body;
+  const { messages, systemPrompt, model, apiKey, endpoint, provider } = req.body;
+  const resolvedProvider = provider === 'custom' ? 'custom' : 'fireworks';
+  const resolvedEndpoint = normalizeChatCompletionsEndpoint(endpoint);
+  const resolvedModel = model || DEFAULT_FIREWORKS_MODEL;
+  const normalizedMessages = Array.isArray(messages)
+    ? messages.map((message) => ({
+      ...message,
+      role: message.role === 'guide' ? 'assistant' : message.role
+    }))
+    : [];
 
   try {
     const response = await axios.post(
-      endpoint || 'https://api.anthropic.com/v1/messages',
+      resolvedEndpoint,
       {
-        model: model || 'claude-sonnet-4-6',
+        model: resolvedModel,
         max_tokens: 1024,
-        system: systemPrompt,
-        messages
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...normalizedMessages
+        ]
       },
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
+          Authorization: `Bearer ${apiKey}`
         }
       }
     );
-    res.json({ success: true, content: response.data.content[0].text });
+
+    const content = response.data?.choices?.[0]?.message?.content
+      ?? response.data?.choices?.[0]?.text
+      ?? response.data?.content?.[0]?.text
+      ?? '';
+
+    res.json({ success: true, provider: resolvedProvider, content });
   } catch (e) {
     res.json({ success: false, error: e.message });
   }

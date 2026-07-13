@@ -74,12 +74,10 @@ export function GuideDashboard({ currentMemberId, onNavigate }: GuideDashboardPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [hasKey, setHasKey] = useState(false);
-  const [provider, setProvider] = useState<string>('anthropic');
 
   useEffect(() => {
     const config = loadNataAIConfig();
-    setProvider(config.provider || 'anthropic');
-    setHasKey(Boolean(config.apiKey) || config.provider === 'ollama');
+    setHasKey(Boolean(config.apiKey));
   }, []);
 
   const handleSend = async () => {

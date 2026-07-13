@@ -1,11 +1,14 @@
 import { PI_URL } from './pi';
 
 export interface NataAIConfig {
-  provider?: 'anthropic' | 'openai' | 'ollama' | 'custom';
+  provider?: 'fireworks' | 'custom';
   endpoint?: string;
   apiKey?: string;
   model?: string;
 }
+
+const DEFAULT_FIREWORKS_ENDPOINT = 'https://api.fireworks.ai/inference/v1';
+const DEFAULT_FIREWORKS_MODEL = 'llama-v3p3-70b-instruct';
 
 export function loadNataAIConfig(): NataAIConfig {
   try {
@@ -17,17 +20,18 @@ export function loadNataAIConfig(): NataAIConfig {
 
 export async function askNataGuide(messages: any[], systemPrompt: string) {
   const config = JSON.parse(localStorage.getItem('nataAIConfig') || '{}');
+  const provider = config.provider === 'custom' ? 'custom' : 'fireworks';
 
   const res = await fetch(`${PI_URL}/ai/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      provider: config.provider || 'anthropic',
+      provider,
       messages,
       systemPrompt,
-      model: config.model || 'claude-sonnet-4-6',
+      model: config.model || DEFAULT_FIREWORKS_MODEL,
       apiKey: config.apiKey,
-      endpoint: config.endpoint,
+      endpoint: config.endpoint || DEFAULT_FIREWORKS_ENDPOINT,
     }),
   });
 
