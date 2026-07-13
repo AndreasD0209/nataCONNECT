@@ -30,13 +30,26 @@ src/lib/fireworksClient.ts
 
 This file builds the request to `https://api.fireworks.ai/inference/v1/chat/completions`, sends the user's question along with a system prompt that enforces two rules (restate the question, then answer as general information only), and returns the parsed response to the Guide UI component at `src/components/GuidePillar.tsx`.
 
-`FIREWORKS_API_KEY` is read from an environment variable at runtime and is never committed to the repository. See [Setup](#setup) below for how to configure it.
+`FIREWORKS_API_KEY` is read from an environment variable at runtime and is never committed to the repository. See [Environment Variables](#environment-variables) below for how to configure it.
 
 ## Tech Stack
 
 - React + TypeScript + Vite
 - Tailwind CSS
 - Fireworks AI API (LLM inference on AMD Instinct GPUs)
+- Finnhub API (live market data for Practice)
+
+## Project Structure
+
+```
+/                     # repo root
+  server.js           # optional local server, used when self-hosting (e.g. no Raspberry Pi available yet, runs from repo root)
+  project/            # the React/Vite frontend application
+    src/
+      lib/fireworksClient.ts
+      components/GuidePillar.tsx
+    .env.local        # frontend environment variables (see below)
+```
 
 ## Setup
 
@@ -45,68 +58,61 @@ This file builds the request to `https://api.fireworks.ai/inference/v1/chat/comp
 - Node.js 18 or later
 - npm
 - A Fireworks AI account and API key ([fireworks.ai](https://fireworks.ai))
+- A Finnhub API key ([finnhub.io](https://finnhub.io)) for live market data in Practice
 
-### Installation
+### Clone
 
 ```bash
 git clone https://github.com/entercrystal/nataCONNECT.git
 cd nataCONNECT
 ```
 
-### Run on PI
+### Environment Variables
+
+Inside the `project/` folder, create a `.env.local` file:
+
+```
+VITE_FIREWORKS_API_KEY=your_fireworks_api_key
+VITE_FINNHUB_KEY=your_finnhub_api_key
+```
+
+Do not commit this file. It is already listed in `.gitignore`.
+
+### Run Locally (frontend only, recommended for judging)
+
+```bash
+cd project
+npm install
+npm run dev
+```
+
+The app starts at `http://localhost:5173` by default. Open it in a modern browser.
+
+### Build for Production
+
+```bash
+cd project
+npm run build
+```
+
+Output is written to `project/dist/`.
+
+### Run on a Raspberry Pi / Self-Hosted
 
 ```bash
 npm install
 node server.js
 ```
 
-### Run on frontend
-
-```bash
-cd project
-npm install
-npm run build
-```
-
-### Environment Variables
-
-Create a `.env.local` file in the project root:
-
-```
-VITE_FINNHUB_KEY=your_finnhub_api_key
-```
-
-Create a `.env.local` file in the project subfolder of the project root:
-
-```
-VITE_FIREBASE_API_KEY=firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=firebase_auth_domain
-VITE_FIREBASE_PROJECT_ID=firebase_project_id
-VITE_FIREBASE_STORAGE_BUCKET=firebase_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=firebase_messaging_sender_id
-VITE_FIREBASE_APP_ID=app_id_here_for_firebase
-```
-
-Do not commit this file. It is already listed in `.gitignore`.
-
-### Run Locally
-
-```bash
-npm run dev
-```
-
-The app starts at `http://localhost:5173` by default. Open it in a modern browser. No backend server or database is required, the entire application runs client side.
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-Output is written to `dist/`.
+This starts the optional local server used for the self-hosted, local-first deployment path described above.
 
 ## External Services
 
-- **Fireworks AI** (`api.fireworks.ai`) — LLM inference for the Guide feature, served on AMD Instinct GPUs. Requires an API key, see [Environment Variables](#environment-variables).
+- **Fireworks AI** (`api.fireworks.ai`) — LLM inference for the Guide feature, served on AMD Instinct GPUs. Requires `VITE_FIREWORKS_API_KEY`.
+- **Finnhub** (`finnhub.io`) — live market data (current, highest, lowest price, percentage change) used in Practice. Requires `VITE_FINNHUB_KEY`.
 
-No other external service, database, or third party API is used. The application does not collect, transmit, or store personal data on any server.
+No other external service, database, or third party API is used beyond what is listed above. The application does not collect, transmit, or store personal data on any server.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
