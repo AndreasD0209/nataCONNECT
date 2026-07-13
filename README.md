@@ -32,8 +32,6 @@ This file builds the request to `https://api.fireworks.ai/inference/v1/chat/comp
 
 `FIREWORKS_API_KEY` is read from an environment variable at runtime and is never committed to the repository. See [Setup](#setup) below for how to configure it.
 
-*(If your team also wired the Practice calculation engine — Monte Carlo simulation, Value at Risk, and Kelly criterion sizing — to run as a job on the AMD Developer Cloud, describe that here in the same way: which file, what it does, and how it is invoked. Remove this note once that section is filled in or delete it if that part was not completed.)*
-
 ## Tech Stack
 
 - React + TypeScript + Vite
@@ -106,29 +104,6 @@ npm run build
 ```
 
 Output is written to `dist/`.
-
-## What Is Real vs. What Is a Concept
-
-This project is honest about what runs today versus what is planned. This distinction matters for judging, so it is stated plainly rather than left implicit.
-
-**Built and running:**
-- The four pillar interface, fully interactive
-- Shield's rule toggles, transaction statuses, and block reasons
-- Practice's trade placement, closing, and statistics
-- Goals' savings progress, "what if" slider, and spending limits
-- Guide, connected live to Fireworks AI running on AMD hardware
-
-**Sample data, not a live feed:**
-- The specific cards, transactions, and scam reports shown in Shield
-- The market prices used in Practice
-
-**Concept only, not implemented:**
-- Device local identity (NataID)
-- Peer to peer payments (NataPay)
-- Family Shield extended to other people's cards
-- The local behavioural model (NataMirror)
-- Emergency device disconnection (NataSOS)
-- The shared, networked version of the scam database
 
 ## External Services
 
